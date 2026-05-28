@@ -1,6 +1,8 @@
 # UJET Animated Profile GIF Generator
 
-Generate an animated GIF profile picture that loops between your photo and the `ujet.cx` logo on UJET blue. Drop in any photo, get back a polished 480x480 GIF ready to upload to Google, Slack, or anywhere else.
+Generate an animated GIF profile picture for your **Google account** that loops between your photo and the `ujet.cx` logo on UJET blue. Drop in any photo, get back a polished 480x480 GIF ready to upload.
+
+> Note: this is intended for **Google profile pictures** (Gmail, Google Chat, Calendar, Workspace). Slack does not animate profile pictures — it will display the first frame as a static image.
 
 ## What it does
 
@@ -51,15 +53,24 @@ python make_profile.py --help
 - High-resolution sources look best (1000x1000 or larger).
 - Background doesn't need to be removed — a clean studio photo or a casual snapshot both work.
 
-## Uploading
+## Uploading to Google
 
-The output is a 480x480 **square** GIF. When you set it as your profile photo:
+The output is a 480x480 **square** GIF. When you set it as your Google profile photo, the upload UI will let you crop a circle from the square.
 
-- **Google / Gmail**: the upload UI lets you crop a circle from the square.
-- **Slack**: same — Slack's avatar uploader handles the crop.
-- Most other platforms work the same way.
+The circle isn't baked into the GIF on purpose — building it in caused dark halo artifacts at the circle edges. Letting Google's upload UI handle the crop avoids that.
 
-This is intentional. Building the circle into the GIF caused dark halo artifacts on some platforms, so the upload UI handles the circle crop for clean results everywhere.
+Where it animates:
+
+- Gmail (sender avatar in some views)
+- Google Chat
+- Google Calendar event participants
+- Other Google Workspace surfaces that render avatars as GIFs
+
+Where it shows as static (first frame):
+
+- Slack (does not animate profile pictures)
+- Most Account Chooser dropdowns and small thumbnail contexts
+- Anywhere that renders avatars as static images
 
 ## Branding
 
@@ -69,7 +80,7 @@ This generator is locked to UJET branding:
 - `ujet.cx` logo (bundled in `assets/ujet_logo.png`)
 - Brand-approved timing and easing
 
-If you want to point it at a different logo file for testing, use `--logo path/to/logo.png` (the logo should be white on black background for the alpha extraction to work).
+If you want to point it at a different logo file for testing, use `--logo path/to/logo.png` (the logo should be white text on a black or dark background — the script extracts the white pixels as the alpha mask).
 
 ## Troubleshooting
 
