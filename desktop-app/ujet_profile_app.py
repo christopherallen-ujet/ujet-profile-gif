@@ -81,6 +81,10 @@ EMBEDDED_LOGO_B64 = (
 
 DEFAULT_OUTPUT = Path.home() / "Downloads" / "ujet_profile.gif"
 
+# Google Account profile-picture page. The user is already signed in via their
+# browser, so this lands them one click from uploading the generated GIF.
+GOOGLE_PHOTO_URL = "https://myaccount.google.com/personal-info"
+
 
 def smoothstep(x: float) -> float:
     x = max(0.0, min(1.0, x))
@@ -294,8 +298,9 @@ def main():
         if error:
             set_busy(False, f"Error: {error}")
             return
-        set_busy(False, f"Saved to {output_path}")
-        reveal_btn.pack(pady=(14, 0))
+        set_busy(False, "Saved. Click Upload to Google, then choose it from Downloads.")
+        upload_btn.pack(fill="x", pady=(14, 0))
+        reveal_btn.pack(pady=(8, 0))
         try:
             import subprocess
             subprocess.run(["/usr/bin/open", str(Path(output_path).parent)], check=False)
@@ -306,6 +311,7 @@ def main():
         if state["busy"] or not state["photo"]:
             return
         set_busy(True, "Rendering frames...")
+        upload_btn.pack_forget()
         reveal_btn.pack_forget()
 
         def worker():
@@ -321,11 +327,20 @@ def main():
         import subprocess
         subprocess.run(["/usr/bin/open", str(DEFAULT_OUTPUT.parent)], check=False)
 
+    def open_google():
+        import subprocess
+        subprocess.run(["/usr/bin/open", GOOGLE_PHOTO_URL], check=False)
+
     choose_btn = ctk.CTkButton(
         body, text="Choose Photo...", height=40,
         font=ctk.CTkFont(size=14), command=choose_photo,
         fg_color=("gray75", "gray25"), hover_color=("gray65", "gray35"),
         text_color=("black", "white"),
+    )
+    upload_btn = ctk.CTkButton(
+        body, text="Upload to Google", height=42,
+        font=ctk.CTkFont(size=15, weight="bold"), command=open_google,
+        fg_color=UJET_BLUE_HEX, hover_color=UJET_BLUE_DARK_HEX,
     )
     reveal_btn = ctk.CTkButton(
         body, text="Open Folder", height=36,
