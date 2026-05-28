@@ -6,10 +6,14 @@ Takes a photo of you and produces a 480x480 animated GIF that loops:
   your photo -> UJET blue background -> ujet.cx logo -> back to your photo
 
 Branding (logo, color, durations) is locked to UJET. Just point it at a photo.
+The ujet.cx wordmark is rendered from text, so the script is fully
+self-contained with no bundled image assets. Pass --logo to use an exact
+brand PNG (white wordmark on a black/transparent background) instead.
 
 Usage:
     python make_profile.py path/to/your_photo.jpg
     python make_profile.py photo.jpg --output my_avatar.gif
+    python make_profile.py photo.jpg --logo assets/ujet_logo.png
 
 Requires: Pillow, numpy
     pip install Pillow numpy
@@ -21,7 +25,7 @@ from pathlib import Path
 
 try:
     import numpy as np
-    from PIL import Image
+    from PIL import Image, ImageDraw, ImageFont
 except ImportError:
     print("ERROR: Missing dependencies. Install with:")
     print("    pip install Pillow numpy")
@@ -36,15 +40,75 @@ FACE_HOLD = 4.8      # seconds your photo is held
 LOGO_HOLD = 1.2      # seconds the logo is held
 BLUE_HOLD = 0.3      # brief beat on solid blue between fade and logo
 LOGO_WIDTH_PCT = 0.72  # logo width as fraction of canvas
+WORDMARK_TEXT = "ujet.cx"
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
+# Optional bundled asset. If absent, the wordmark is rendered from text.
 DEFAULT_LOGO_PATH = SCRIPT_DIR / "assets" / "ujet_logo.png"
+
+# Candidate bold fonts, in preference order. macOS paths first (this is an
+# internal Mac fleet tool), then common Linux locations, then PIL fallback.
+FONT_CANDIDATES = [
+    "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+    "/System/Library/Fonts/Supplemental/Helvetica.ttc",
+    "/System/Library/Fonts/HelveticaNeue.ttc",
+    "/System/Library/Fonts/Helvetica.ttc",
+    "/Library/Fonts/Arial Bold.ttf",
+    "/System/Library/Fonts/SFNSDisplay.ttf",
+    "/System/Library/Fonts/SFNS.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+    "/usr/share/fonts/google-fonts/Poppins-Bold.ttf",
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+]
 
 
 def smoothstep(x: float) -> float:
     """Ease-in-out curve."""
     x = max(0.0, min(1.0, x))
     return x * x * (3 - 2 * x)
+
+
+def load_bold_font(px: int) -> ImageFont.FreeTypeFont:
+    """
+    Load the first available bold TrueType font at the given pixel size.
+
+    Falls back to PIL's bitmap default if no system font is found (the
+    wordmark still renders, just less crisply).
+    """
+    for path in FONT_CANDIDATES:
+        if os.path.exists(path):
+            try:
+                return ImageFont.truetype(path, px)
+            except Exception:
+                continue
+    return ImageFont.load_default()
+
+
+def render_wordmark() -> Image.Image:
+    """
+    Render the 'ujet.cx' wordmark as white text on a black background.
+
+    Returns an RGB image (white text on black) matching the format the
+    rest of the pipeline expects, where grayscale doubles as the alpha
+    channel. Rendered large so downstream resizing stays crisp.
+    """
+    render_px = 400
+    font = load_bold_font(render_px)
+
+    # Measure the text so we can size a tight canvas with a little padding.
+    tmp = Image.new("RGB", (10, 10))
+    bbox = ImageDraw.Draw(tmp).textbbox((0, 0), WORDMARK_TEXT, font=font)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
+
+    pad_x = int(render_px * 0.12)
+    pad_y = int(render_px * 0.12)
+    canvas = Image.new("RGB", (text_w + 2 * pad_x, text_h + 2 * pad_y), (0, 0, 0))
+    draw = ImageDraw.Draw(canvas)
+    # Offset by the bbox origin so the glyphs sit inside the padding.
+    draw.text((pad_x - bbox[0], pad_y - bbox[1]), WORDMARK_TEXT,
+              font=font, fill=(255, 255, 255))
+    return canvas
 
 
 def prepare_photo(photo_path: Path) -> np.ndarray:
@@ -68,17 +132,20 @@ def prepare_photo(photo_path: Path) -> np.ndarray:
     return np.array(img, dtype=np.float32)
 
 
-def prepare_logo_screen(logo_path: Path) -> tuple[np.ndarray, np.ndarray]:
+def prepare_logo_screen(logo_img: Image.Image) -> tuple[np.ndarray, np.ndarray]:
     """
     Build the logo screen: UJET blue background with white logo centered.
 
+    Accepts a PIL image of white text/logo on a black background (either a
+    loaded PNG asset or the rendered wordmark).
+
     Returns:
-        (logo_screen_arr, logo_white_mask) — both float32 numpy arrays.
+        (logo_screen_arr, logo_white_mask) - both float32 numpy arrays.
         The mask is 1.0 where the logo is white, 0.0 where the background shows.
     """
-    logo_raw = Image.open(logo_path).convert("RGB")
+    logo_raw = logo_img.convert("RGB")
 
-    # The logo file is white text on black. Use grayscale as the alpha channel.
+    # White text on black -> use grayscale as the alpha channel.
     arr = np.array(logo_raw)
     gray = arr.mean(axis=-1)
     alpha = (gray / 255.0 * 255).astype(np.uint8)
@@ -113,7 +180,7 @@ def build_frames(face_arr: np.ndarray,
     """
     Build the full sequence of frames.
 
-    Loop phases (sequential, no crossfade — prevents ghosting):
+    Loop phases (sequential, no crossfade - prevents ghosting):
       face_hold -> fade_to_blue -> blue_hold -> fade_logo_in
       -> logo_hold -> fade_logo_out -> blue_hold -> fade_to_face
     """
@@ -194,24 +261,34 @@ def main():
     parser.add_argument("photo", type=Path, help="Path to your photo (JPG, PNG, etc).")
     parser.add_argument("-o", "--output", type=Path, default=Path("ujet_profile.gif"),
                         help="Output GIF path (default: ujet_profile.gif).")
-    parser.add_argument("--logo", type=Path, default=DEFAULT_LOGO_PATH,
-                        help="Path to logo PNG (default: bundled ujet.cx logo).")
+    parser.add_argument("--logo", type=Path, default=None,
+                        help="Optional white-on-black logo PNG. If omitted, the "
+                             "ujet.cx wordmark is rendered from text.")
     args = parser.parse_args()
 
     if not args.photo.exists():
         print(f"ERROR: Photo not found: {args.photo}")
         sys.exit(1)
 
-    if not args.logo.exists():
-        print(f"ERROR: Logo not found: {args.logo}")
-        print("       Make sure you cloned the full repo (assets/ujet_logo.png).")
-        sys.exit(1)
-
     print(f"Loading photo: {args.photo}")
     face_arr = prepare_photo(args.photo)
 
-    print(f"Loading logo: {args.logo}")
-    _, logo_mask = prepare_logo_screen(args.logo)
+    # Resolve the logo source: explicit --logo, then a bundled asset if one
+    # happens to exist, then the rendered wordmark as the self-contained default.
+    if args.logo is not None:
+        if not args.logo.exists():
+            print(f"ERROR: Logo not found: {args.logo}")
+            sys.exit(1)
+        print(f"Loading logo: {args.logo}")
+        logo_img = Image.open(args.logo)
+    elif DEFAULT_LOGO_PATH.exists():
+        print(f"Loading logo: {DEFAULT_LOGO_PATH}")
+        logo_img = Image.open(DEFAULT_LOGO_PATH)
+    else:
+        print(f"Rendering wordmark: {WORDMARK_TEXT}")
+        logo_img = render_wordmark()
+
+    _, logo_mask = prepare_logo_screen(logo_img)
 
     total_dur = FACE_HOLD + 4 * FADE_DUR + LOGO_HOLD + 2 * BLUE_HOLD
     n_frames = int(total_dur * FPS)
