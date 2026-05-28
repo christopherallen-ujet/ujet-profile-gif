@@ -298,7 +298,7 @@ def main():
         reveal_btn.pack(pady=(14, 0))
         try:
             import subprocess
-            subprocess.run(["open", "-R", str(output_path)], check=False)
+            subprocess.run(["/usr/bin/open", str(Path(output_path).parent)], check=False)
         except Exception:
             pass
 
@@ -319,7 +319,7 @@ def main():
 
     def reveal():
         import subprocess
-        subprocess.run(["open", "-R", str(DEFAULT_OUTPUT)], check=False)
+        subprocess.run(["/usr/bin/open", str(DEFAULT_OUTPUT.parent)], check=False)
 
     choose_btn = ctk.CTkButton(
         body, text="Choose Photo...", height=40,
@@ -328,7 +328,7 @@ def main():
         text_color=("black", "white"),
     )
     reveal_btn = ctk.CTkButton(
-        body, text="Reveal in Finder", height=36,
+        body, text="Open Folder", height=36,
         font=ctk.CTkFont(size=13), command=reveal,
         fg_color="transparent", border_width=1,
         border_color=UJET_BLUE_HEX, text_color=UJET_BLUE_HEX,
