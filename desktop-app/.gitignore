@@ -1,0 +1,20 @@
+# Build artifacts
+build/
+dist/
+.buildvenv/
+*.spec
+
+# Generated at build time
+icon.png
+icon.icns
+icon.iconset/
+
+# Installer output
+*.pkg
+
+# Python
+__pycache__/
+*.py[cod]
+
+# OS
+.DS_Store
