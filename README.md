@@ -2,7 +2,7 @@
 
 Generate an animated GIF profile picture for your **Google account** that loops between your photo and the `ujet.cx` logo on UJET blue. Drop in any photo, get back a polished 480x480 GIF ready to upload.
 
-> Note: this is intended for **Google profile pictures** (Gmail, Google Chat, Calendar, Workspace). Slack does not animate profile pictures — it will display the first frame as a static image.
+> Note: this is intended for **Google profile pictures** (Gmail, Google Chat, Calendar, Workspace). Surfaces that don't animate avatars will display the first frame as a static image.
 
 ## What it does
 
@@ -68,7 +68,6 @@ Where it animates:
 
 Where it shows as static (first frame):
 
-- Slack (does not animate profile pictures)
 - Most Account Chooser dropdowns and small thumbnail contexts
 - Anywhere that renders avatars as static images
 
