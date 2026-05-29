@@ -76,7 +76,7 @@ EMBEDDED_LOGO_B64 = (
     "3ZqOV5z+9/+bzGkh+qfd879+dY0xZMvf/yfl3Uv00drXR/b/kZxkaUfw3vADAMel6pAqUQ+76kOVfGRAfyV+3Wc9jQRoLp0Vsdej"
     "Oxqg70ku1sse3dGYpLJZoVYv0ZZ0XxLorR7c0YRoFsdR9uROcdj8+UxPjYPCGv1foZ6aU1b3mqMLvaEp/O1RcU+6QoWoh8W5OEe0"
     "4umeWlJCOWu2p1E4dt2loj/yUMW4g6+nZhRRitR7cu9F9wq6GzXde3bdqOke51FS3Ife3arpMuih6EJNZ31utAs1XfbqGaafuWro"
-    "Xz//z2+/7/EE6b+qq8R0e2BlxQAAAABJRU5ErkJggg=="
+    "Xz//z2+/6/EE6b+qq8R0e2BlxQAAAABJRU5ErkJggg=="
 )
 
 DEFAULT_OUTPUT = Path.home() / "Downloads" / "ujet_profile.gif"
