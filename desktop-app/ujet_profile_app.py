@@ -76,7 +76,7 @@ EMBEDDED_LOGO_B64 = (
     "3ZqOV5z+9/+bzGkh+qfd879+dY0xZMvf/yfl3Uv00drXR/b/kZxkaUfw3vADAMel6pAqUQ+76kOVfGRAfyV+3Wc9jQRoLp0Vsdej"
     "Oxqg70ku1sse3dGYpLJZoVYv0ZZ0XxLorR7c0YRoFsdR9uROcdj8+UxPjYPCGv1foZ6aU1b3mqMLvaEp/O1RcU+6QoWoh8W5OEe0"
     "4umeWlJCOWu2p1E4dt2loj/yUMW4g6+nZhRRitR7cu9F9wq6GzXde3bdqOke51FS3Ife3arpMuih6EJNZ31utAs1XfbqGaafuWro"
-    "Xz//z2+/6/EE6b+qq8R0e2BlxQAAAABJRU5ErkJggg=="
+    "Xz//z2+/7/EE6b+qq8R0e2BlxQAAAABJRU5ErkJggg=="
 )
 
 DEFAULT_OUTPUT = Path.home() / "Downloads" / "ujet_profile.gif"
@@ -212,8 +212,8 @@ def main():
 
     app = ctk.CTk()
     app.title("UJET Profile GIF")
-    app.geometry("520x640")
-    app.minsize(520, 640)
+    app.geometry("520x780")
+    app.minsize(520, 780)
 
     state = {"photo": None, "busy": False}
 
@@ -235,11 +235,11 @@ def main():
 
     # ---- Photo preview ----
     preview = ctk.CTkLabel(
-        body, text="No photo selected", width=300, height=300,
+        body, text="No photo selected", width=280, height=280,
         fg_color=("#e6e6e6", "#2b2b2b"), corner_radius=16,
         font=ctk.CTkFont(size=14),
     )
-    preview.pack(pady=(4, 18))
+    preview.pack(pady=(4, 14))
 
     def render_preview(path):
         img = Image.open(path).convert("RGB")
@@ -247,8 +247,8 @@ def main():
         side = min(w, h)
         img = img.crop(((w - side) // 2, (h - side) // 2,
                         (w - side) // 2 + side, (h - side) // 2 + side))
-        img = img.resize((300, 300), Image.LANCZOS)
-        ctk_img = ctk.CTkImage(light_image=img, dark_image=img, size=(300, 300))
+        img = img.resize((280, 280), Image.LANCZOS)
+        ctk_img = ctk.CTkImage(light_image=img, dark_image=img, size=(280, 280))
         preview.configure(image=ctk_img, text="")
         preview.image = ctk_img  # keep a reference
 
