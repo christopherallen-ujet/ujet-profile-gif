@@ -257,7 +257,7 @@ def main():
 
     generate_btn = ctk.CTkButton(
         body, text="Generate GIF", height=46,
-        font=ctk.CTkFont(size=16, weight="bold"),
+        font=ctk.CTkFont(size=15, weight="bold"),
         fg_color=UJET_BLUE_HEX, hover_color=UJET_BLUE_DARK_HEX,
     )
 
@@ -299,8 +299,8 @@ def main():
             set_busy(False, f"Error: {error}")
             return
         set_busy(False, "Saved. Click Upload to Google, then choose it from Downloads.")
-        upload_btn.pack(fill="x", pady=(14, 0))
-        reveal_btn.pack(pady=(8, 0))
+        upload_btn.pack(fill="x", pady=(10, 0))
+        reveal_btn.pack(fill="x", pady=(10, 0))
         try:
             import subprocess
             subprocess.run(["/usr/bin/open", str(Path(output_path).parent)], check=False)
@@ -338,13 +338,13 @@ def main():
         text_color=("black", "white"),
     )
     upload_btn = ctk.CTkButton(
-        body, text="Upload to Google", height=42,
+        body, text="Upload to Google", height=46,
         font=ctk.CTkFont(size=15, weight="bold"), command=open_google,
         fg_color=UJET_BLUE_HEX, hover_color=UJET_BLUE_DARK_HEX,
     )
     reveal_btn = ctk.CTkButton(
-        body, text="Open Folder", height=36,
-        font=ctk.CTkFont(size=13), command=reveal,
+        body, text="Open Folder", height=46,
+        font=ctk.CTkFont(size=15), command=reveal,
         fg_color="transparent", border_width=1,
         border_color=UJET_BLUE_HEX, text_color=UJET_BLUE_HEX,
         hover_color=("gray85", "gray20"),
