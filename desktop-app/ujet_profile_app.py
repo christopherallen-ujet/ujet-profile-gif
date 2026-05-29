@@ -216,6 +216,7 @@ def main():
     app.minsize(520, 780)
 
     state = {"photo": None, "busy": False}
+    anim = {"job": None, "frames": [], "idx": 0, "durations": []}
 
     # ---- Header ----
     header = ctk.CTkFrame(app, fg_color=UJET_BLUE_HEX, corner_radius=0, height=110)
@@ -252,6 +253,39 @@ def main():
         preview.configure(image=ctk_img, text="")
         preview.image = ctk_img  # keep a reference
 
+    def stop_animation():
+        if anim["job"] is not None:
+            app.after_cancel(anim["job"])
+            anim["job"] = None
+
+    def animate_gif(path):
+        """Load the generated GIF's frames and loop them in the preview."""
+        stop_animation()
+        gif = Image.open(path)
+        frames, durations = [], []
+        try:
+            i = 0
+            while True:
+                gif.seek(i)
+                frame = gif.convert("RGB").resize((280, 280), Image.LANCZOS)
+                frames.append(ctk.CTkImage(light_image=frame, dark_image=frame, size=(280, 280)))
+                durations.append(gif.info.get("duration", 100))
+                i += 1
+        except EOFError:
+            pass
+        if not frames:
+            return
+        anim["frames"], anim["durations"], anim["idx"] = frames, durations, 0
+
+        def tick():
+            preview.configure(image=anim["frames"][anim["idx"]], text="")
+            preview.image = anim["frames"][anim["idx"]]
+            delay = anim["durations"][anim["idx"]]
+            anim["idx"] = (anim["idx"] + 1) % len(anim["frames"])
+            anim["job"] = app.after(delay, tick)
+
+        tick()
+
     status = ctk.CTkLabel(body, text="Choose a photo to get started.",
                           font=ctk.CTkFont(size=13), text_color=("gray30", "gray70"))
 
@@ -287,6 +321,7 @@ def main():
         if not path:
             return
         state["photo"] = path
+        stop_animation()
         try:
             render_preview(path)
         except Exception:
@@ -299,6 +334,10 @@ def main():
             set_busy(False, f"Error: {error}")
             return
         set_busy(False, "Saved. Click Upload to Google, then choose it from Downloads.")
+        try:
+            animate_gif(output_path)
+        except Exception:
+            pass
         upload_btn.pack(fill="x", pady=(10, 0))
         reveal_btn.pack(fill="x", pady=(10, 0))
         try:
